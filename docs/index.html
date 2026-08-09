@@ -70,7 +70,7 @@ async def custom_site():
         __import__(__name__).__file__ = main
 
         # now make a prompt
-        msg  = "Ready to start ! Please click/touch page"
+        msg  = "READY FOR LIFTOFF! Tap here!"
         platform.window.infobox.innerText = msg
         print("\n"*4, f"    * Waiting for media user engagement. {msg} *" , "\n"*4)
 
@@ -286,6 +286,54 @@ function show_infobox() {
 
     <script src="https://pygame-web.github.io/cdn/0.9.3//browserfs.min.js"></script>
 
+    <style>
+        /* 1. Deep space blue background */
+        body, html {
+            background-color: rgb(10, 10, 30) !important;
+        }
+
+        /* 2. Make the "Downloading..." text white and friendly */
+        #status {
+            color: white !important;
+            font-size: 24px !important;
+            font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif !important;
+            margin-top: 40px !important;
+            text-align: center !important;
+            width: 100% !important;
+        }
+        
+        #transfer {
+            margin-top: 20vh !important;
+        }
+
+        /* 3. Turn the ugly infobox into a massive, bouncy launch button */
+        #infobox {
+            background-color: #32CD32 !important; /* Bright green */
+            color: white !important;
+            font-size: 35px !important;
+            font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif !important;
+            font-weight: bold !important;
+            padding: 30px 50px !important;
+            border-radius: 20px !important;
+            border: 4px solid white !important;
+            box-shadow: 0px 8px 0px #006400 !important; /* 3D effect */
+            cursor: pointer !important;
+            text-align: center !important;
+            
+            /* Center it perfectly on the screen */
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            width: max-content !important;
+            max-width: 90vw !important;
+        }
+
+        /* 4. Make it bounce down when he taps it */
+        #infobox:active {
+            transform: translate(-50%, calc(-50% + 8px)) !important;
+            box-shadow: 0px 0px 0px #006400 !important;
+        }
+    </style>
 </head>
 
 <body>
