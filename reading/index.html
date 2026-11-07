@@ -12,6 +12,22 @@
             background: linear-gradient(135deg, #fbcfe8 0%, #bae6fd 100%);
             min-height: 100vh;
         }
+
+        /* Custom bounce animation that runs for 3 seconds then stops */
+        @keyframes bounce-three-seconds {
+            0%, 100% {
+                transform: translateY(0);
+                animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+            }
+            50% {
+                transform: translateY(-25%);
+                animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+            }
+        }
+
+        .bounce-limited {
+            animation: bounce-three-seconds 0.6s ease-in-out 5; /* 5 iterations * 0.6s = exactly 3 seconds */
+        }
     </style>
 </head>
 <body class="flex flex-col items-center justify-center p-4">
@@ -53,6 +69,17 @@
             { word: 'BOOK', icon: '📖' },
             { word: 'TREE', icon: '🌳' },
             { word: 'MILK', icon: '🥛' }
+        ];
+
+        const WORDS_LEVEL_3 = [
+            { word: 'SHOP', icon: '🛒' },
+            { word: 'JUMP', icon: '🦘' },
+            { word: 'PLUM', icon: '🫐' },
+            { word: 'SLIDE', icon: '🛝' },
+            { word: 'DRUM', icon: '🥁' },
+            { word: 'CRAB', icon: '🦀' },
+            { word: 'SWIM', icon: '🏊‍♂️' },
+            { word: 'HAND', icon: '✋' }
         ];
 
         const OTHER_IMAGES = [
@@ -105,7 +132,10 @@
         }
 
         function getNewWordChallenge() {
-            const pool = gameState.level === 2 ? WORDS_LEVEL_2 : WORDS_LEVEL_1;
+            let pool = WORDS_LEVEL_1;
+            if (gameState.level === 2) pool = WORDS_LEVEL_2;
+            if (gameState.level === 3) pool = WORDS_LEVEL_3;
+
             let correct = pool[Math.floor(Math.random() * pool.length)];
             let distractors = pool.filter(w => w.word !== correct.word)
                                   .sort(() => Math.random() - 0.5)
@@ -142,7 +172,6 @@
         }
 
         function nextWordAfterMiss() {
-            // FIX: Set phase back to 'word' and get a new word challenge before rendering
             gameState.phase = 'word';
             getNewWordChallenge();
             render();
@@ -155,12 +184,17 @@
 
             if (gameState.phase === 'won') {
                 subTitle.innerText = "You found him!";
-                let nextLevelBtn = gameState.level === 1 
-                    ? `<button onclick="initGame(2)" class="bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold text-xl sm:text-2xl px-8 py-4 rounded-full shadow-lg hover:scale-105 transition transform">Go to Level 2! 🚀</button>`
-                    : `<button onclick="initGame(1)" class="bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold text-xl sm:text-2xl px-8 py-4 rounded-full shadow-lg hover:scale-105 transition transform">Play Again (Level 1) 🚀</button>`;
+                let nextLevelBtn = '';
+                if (gameState.level === 1) {
+                    nextLevelBtn = `<button onclick="initGame(2)" class="bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold text-xl sm:text-2xl px-8 py-4 rounded-full shadow-lg hover:scale-105 transition transform">Go to Level 2! 🚀</button>`;
+                } else if (gameState.level === 2) {
+                    nextLevelBtn = `<button onclick="initGame(3)" class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold text-xl sm:text-2xl px-8 py-4 rounded-full shadow-lg hover:scale-105 transition transform">Go to Level 3! 🚀</button>`;
+                } else {
+                    nextLevelBtn = `<button onclick="initGame(1)" class="bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold text-xl sm:text-2xl px-8 py-4 rounded-full shadow-lg hover:scale-105 transition transform">Play Again (Level 1) 🚀</button>`;
+                }
 
                 container.innerHTML = `
-                    <div class="py-4 animate-bounce">
+                    <div class="py-4 bounce-limited">
                         <h2 class="text-3xl sm:text-5xl font-extrabold text-green-600 mb-4">🎉 YOU FOUND OSCAR! 🎉</h2>
                         <div class="w-48 h-48 sm:w-56 sm:h-56 mx-auto rounded-3xl border-8 border-pink-400 shadow-xl overflow-hidden mb-6">
                             <img src="${OSCAR_IMAGE}" alt="Oscar" class="w-full h-full object-cover">
@@ -217,7 +251,13 @@
                 feedbackBoxHTML = `<p class="text-gray-500 text-sm mt-4">Turn over a card to see who is hiding underneath!</p>`;
             }
 
-            subTitle.innerText = gameState.level === 1 ? "Read Level 1 words to find Oscar!" : "Read Level 2 words to find Oscar! (Trickier words!)";
+            if (gameState.level === 1) {
+                subTitle.innerText = "Read Level 1 words to find Oscar!";
+            } else if (gameState.level === 2) {
+                subTitle.innerText = "Read Level 2 words to find Oscar!";
+            } else {
+                subTitle.innerText = "Read Level 3 words to find Oscar! (Super star reader!)";
+            }
 
             container.innerHTML = `
                 <div id="phase-banner" class="mb-6 p-3 sm:p-4 rounded-2xl ${bannerClass} font-bold text-lg sm:text-xl">
