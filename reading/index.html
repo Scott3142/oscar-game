@@ -12,34 +12,20 @@
             background: linear-gradient(135deg, #fbcfe8 0%, #bae6fd 100%);
             min-height: 100vh;
         }
-
-        /* Custom bounce animation that runs for 3 seconds then stops */
-        @keyframes bounce-three-seconds {
-            0%, 100% {
-                transform: translateY(0);
-                animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
-            }
-            50% {
-                transform: translateY(-25%);
-                animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
-            }
-        }
-
-        .bounce-limited {
-            animation: bounce-three-seconds 0.6s ease-in-out 5; /* 5 iterations * 0.6s = exactly 3 seconds */
-        }
     </style>
 </head>
 <body class="flex flex-col items-center justify-center p-4">
     <div class="max-w-xl w-full bg-white/95 backdrop-blur rounded-3xl shadow-2xl p-6 sm:p-8 text-center border-4 border-yellow-300">
         
-        <!-- Header -->
-        <div class="flex justify-between items-center mb-2">
+        <!-- Header (Only shown during gameplay) -->
+        <div id="game-header" class="hidden justify-between items-center mb-2">
+            <button onclick="goHome()" class="bg-yellow-100 hover:bg-yellow-200 text-yellow-800 font-bold px-4 py-2 rounded-2xl text-sm shadow transition flex items-center gap-1">
+                🏠 Home
+            </button>
             <span id="level-badge" class="bg-purple-100 text-purple-700 font-bold px-3 py-1 rounded-full text-sm">Level 1</span>
-            <h1 class="text-3xl sm:text-4xl font-bold text-purple-600">🌟 Find Oscar! 🌟</h1>
             <span class="w-16"></span>
         </div>
-        <p id="sub-title" class="text-gray-600 mb-6 text-base sm:text-lg">Read the word to unlock a card and find Oscar!</p>
+        <p id="sub-title" class="text-gray-600 mb-6 text-base sm:text-lg">Read words to find Oscar hiding with the family!</p>
 
         <!-- Dynamic Game Container -->
         <div id="game-container">
@@ -94,10 +80,10 @@
 
         const OSCAR_IMAGE = 'images/oscar.jpg';
 
-        // Game State
+        // Game State ('home', 'word', 'card', 'wrong_guess', 'won')
         let gameState = {
+            phase: 'home',
             level: 1,
-            phase: 'word', // 'word', 'card', 'wrong_guess', or 'won'
             currentWord: null,
             wordOptions: [],
             totalCards: 8,
@@ -106,6 +92,11 @@
             revealedCards: Array(8).fill(false),
             lastRevealedPerson: ''
         };
+
+        function goHome() {
+            gameState.phase = 'home';
+            render();
+        }
 
         function initGame(level = 1) {
             gameState.level = level;
@@ -178,9 +169,36 @@
         }
 
         function render() {
-            document.getElementById('level-badge').innerText = `Level ${gameState.level}`;
+            const header = document.getElementById('game-header');
             const subTitle = document.getElementById('sub-title');
             const container = document.getElementById('game-container');
+
+            // --- HOME SCREEN ---
+            if (gameState.phase === 'home') {
+                header.classList.add('hidden');
+                subTitle.innerText = "Choose a level to start finding Oscar!";
+                container.innerHTML = `
+                    <div class="py-6 flex flex-col gap-4 max-w-xs mx-auto">
+                        <div class="w-32 h-32 mx-auto rounded-full border-4 border-pink-400 shadow-lg overflow-hidden mb-2">
+                            <img src="${OSCAR_IMAGE}" alt="Oscar" class="w-full h-full object-cover">
+                        </div>
+                        <button onclick="initGame(1)" class="bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold text-xl py-4 rounded-2xl shadow-lg hover:scale-105 transition transform">
+                            ⭐ Level 1 (Easy)
+                        </button>
+                        <button onclick="initGame(2)" class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold text-xl py-4 rounded-2xl shadow-lg hover:scale-105 transition transform">
+                            🌟 Level 2 (Medium)
+                        </button>
+                        <button onclick="initGame(3)" class="bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold text-xl py-4 rounded-2xl shadow-lg hover:scale-105 transition transform">
+                            🚀 Level 3 (Super Star)
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            // --- GAME PLAY / WIN SCREENS ---
+            header.classList.remove('hidden');
+            document.getElementById('level-badge').innerText = `Level ${gameState.level}`;
 
             if (gameState.phase === 'won') {
                 subTitle.innerText = "You found him!";
@@ -190,11 +208,11 @@
                 } else if (gameState.level === 2) {
                     nextLevelBtn = `<button onclick="initGame(3)" class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold text-xl sm:text-2xl px-8 py-4 rounded-full shadow-lg hover:scale-105 transition transform">Go to Level 3! 🚀</button>`;
                 } else {
-                    nextLevelBtn = `<button onclick="initGame(1)" class="bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold text-xl sm:text-2xl px-8 py-4 rounded-full shadow-lg hover:scale-105 transition transform">Play Again (Level 1) 🚀</button>`;
+                    nextLevelBtn = `<button onclick="goHome()" class="bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold text-xl sm:text-2xl px-8 py-4 rounded-full shadow-lg hover:scale-105 transition transform">Back to Home 🏠</button>`;
                 }
 
                 container.innerHTML = `
-                    <div class="py-4 bounce-limited">
+                    <div class="py-4">
                         <h2 class="text-3xl sm:text-5xl font-extrabold text-green-600 mb-4">🎉 YOU FOUND OSCAR! 🎉</h2>
                         <div class="w-48 h-48 sm:w-56 sm:h-56 mx-auto rounded-3xl border-8 border-pink-400 shadow-xl overflow-hidden mb-6">
                             <img src="${OSCAR_IMAGE}" alt="Oscar" class="w-full h-full object-cover">
@@ -251,13 +269,7 @@
                 feedbackBoxHTML = `<p class="text-gray-500 text-sm mt-4">Turn over a card to see who is hiding underneath!</p>`;
             }
 
-            if (gameState.level === 1) {
-                subTitle.innerText = "Read Level 1 words to find Oscar!";
-            } else if (gameState.level === 2) {
-                subTitle.innerText = "Read Level 2 words to find Oscar!";
-            } else {
-                subTitle.innerText = "Read Level 3 words to find Oscar! (Super star reader!)";
-            }
+            subTitle.innerText = `Level ${gameState.level} - Read the word to unlock a card!`;
 
             container.innerHTML = `
                 <div id="phase-banner" class="mb-6 p-3 sm:p-4 rounded-2xl ${bannerClass} font-bold text-lg sm:text-xl">
@@ -288,8 +300,8 @@
             `;
         }
 
-        // Start game on load
-        initGame(1);
+        // Start on home screen on load
+        render();
     </script>
 </body>
 </html>

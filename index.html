@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oscar's Games! 🎮</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Fredoka', cursive, sans-serif;
+            background: linear-gradient(135deg, #fbcfe8 0%, #bae6fd 100%);
+            min-height: 100vh;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center p-4">
+    <div class="max-w-xl w-full bg-white/95 backdrop-blur rounded-3xl shadow-2xl p-8 text-center border-4 border-yellow-300">
+        
+        <h1 class="text-4xl sm:text-5xl font-extrabold text-purple-600 mb-2">🌟 Oscar's Games! 🌟</h1>
+        <p class="text-gray-600 mb-8 text-lg">Pick a game to play today!</p>
+
+        <!-- Game Selection Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-md mx-auto">
+            
+            <!-- Reading Game Card -->
+            <a href="reading/" class="group bg-gradient-to-br from-pink-400 to-purple-500 hover:from-pink-500 hover:to-purple-600 text-white rounded-3xl p-6 shadow-xl hover:scale-105 transition transform flex flex-col items-center justify-center border-4 border-white">
+                <span class="text-6xl mb-3">📖</span>
+                <span class="text-2xl font-bold">Reading</span>
+                <span class="text-sm text-pink-100 mt-1">Find Oscar & Family!</span>
+            </a>
+
+            <!-- Numberblocks Game Card -->
+            <a href="numberblocks/" class="group bg-gradient-to-br from-blue-400 to-indigo-500 hover:from-blue-500 hover:to-indigo-600 text-white rounded-3xl p-6 shadow-xl hover:scale-105 transition transform flex flex-col items-center justify-center border-4 border-white">
+                <span class="text-6xl mb-3">🔢</span>
+                <span class="text-2xl font-bold">Numberblocks</span>
+                <span class="text-sm text-blue-100 mt-1">Let's count & play!</span>
+            </a>
+
+        </div>
+    </div>
+</body>
+</html>
