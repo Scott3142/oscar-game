@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find Oscar! 🌟</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Fredoka', cursive, sans-serif;
+            background: linear-gradient(135deg, #fbcfe8 0%, #bae6fd 100%);
+            min-height: 100vh;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center p-4">
+    <div class="max-w-xl w-full bg-white/95 backdrop-blur rounded-3xl shadow-2xl p-6 sm:p-8 text-center border-4 border-yellow-300">
+        
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-2">
+            <span id="level-badge" class="bg-purple-100 text-purple-700 font-bold px-3 py-1 rounded-full text-sm">Level 1</span>
+            <h1 class="text-3xl sm:text-4xl font-bold text-purple-600">🌟 Find Oscar! 🌟</h1>
+            <span class="w-16"></span>
+        </div>
+        <p id="sub-title" class="text-gray-600 mb-6 text-base sm:text-lg">Read the word to unlock a card and find Oscar!</p>
+
+        <!-- Dynamic Game Container -->
+        <div id="game-container">
+            <!-- Rendered via JavaScript -->
+        </div>
+    </div>
+
+    <script>
+        // Phonics Word Banks
+        const WORDS_LEVEL_1 = [
+            { word: 'CAT', icon: '🐱' },
+            { word: 'HAT', icon: '🎩' },
+            { word: 'MAP', icon: '🗺️' },
+            { word: 'DOG', icon: '🐶' },
+            { word: 'SUN', icon: '☀️' },
+            { word: 'CAR', icon: '🚗' },
+            { word: 'PEN', icon: '🖊️' },
+            { word: 'CUP', icon: '☕' }
+        ];
+
+        const WORDS_LEVEL_2 = [
+            { word: 'SHIP', icon: '🚢' },
+            { word: 'FISH', icon: '🐠' },
+            { word: 'FROG', icon: '🐸' },
+            { word: 'STAR', icon: '⭐' },
+            { word: 'MOON', icon: '🌙' },
+            { word: 'BOOK', icon: '📖' },
+            { word: 'TREE', icon: '🌳' },
+            { word: 'MILK', icon: '🥛' }
+        ];
+
+        const OTHER_IMAGES = [
+            'images/janny.jpg',
+            'images/esme.jpg',
+            'images/nanna.jpg',
+            'images/daddy.jpg',
+            'images/mummy.jpg',
+            'images/charley.jpg',
+            'images/gareth.jpg'
+        ];
+
+        const OSCAR_IMAGE = 'images/oscar.jpg';
+
+        // Game State
+        let gameState = {
+            level: 1,
+            phase: 'word', // 'word', 'card', 'wrong_guess', or 'won'
+            currentWord: null,
+            wordOptions: [],
+            totalCards: 8,
+            winningCard: 0,
+            cardImages: [],
+            revealedCards: Array(8).fill(false),
+            lastRevealedPerson: ''
+        };
+
+        function initGame(level = 1) {
+            gameState.level = level;
+            gameState.phase = 'word';
+            gameState.revealedCards = Array(8).fill(false);
+            
+            // Randomize winning card
+            gameState.winningCard = Math.floor(Math.random() * gameState.totalCards);
+            
+            // Shuffle family images and place Oscar
+            let shuffledFamily = [...OTHER_IMAGES].sort(() => Math.random() - 0.5);
+            gameState.cardImages = [];
+            let famIdx = 0;
+            for (let i = 0; i < gameState.totalCards; i++) {
+                if (i === gameState.winningCard) {
+                    gameState.cardImages.push(OSCAR_IMAGE);
+                } else {
+                    gameState.cardImages.push(shuffledFamily[famIdx++]);
+                }
+            }
+
+            getNewWordChallenge();
+            render();
+        }
+
+        function getNewWordChallenge() {
+            const pool = gameState.level === 2 ? WORDS_LEVEL_2 : WORDS_LEVEL_1;
+            let correct = pool[Math.floor(Math.random() * pool.length)];
+            let distractors = pool.filter(w => w.word !== correct.word)
+                                  .sort(() => Math.random() - 0.5)
+                                  .slice(0, 2);
+            
+            gameState.wordOptions = [...distractors, correct].sort(() => Math.random() - 0.5);
+            gameState.currentWord = correct;
+        }
+
+        function submitAnswer(icon) {
+            if (icon === gameState.currentWord.icon) {
+                gameState.phase = 'card';
+                render();
+            } else {
+                getNewWordChallenge();
+                render();
+                document.getElementById('feedback').innerText = '❌ Sound it out and try again!';
+            }
+        }
+
+        function pickCard(index) {
+            gameState.revealedCards[index] = true;
+            let imagePath = gameState.cardImages[index];
+            let nameParts = imagePath.split('/');
+            let fileName = nameParts[nameParts.length - 1].split('.')[0];
+            gameState.lastRevealedPerson = fileName.charAt(0).toUpperCase() + fileName.slice(1);
+
+            if (index === gameState.winningCard) {
+                gameState.phase = 'won';
+            } else {
+                gameState.phase = 'wrong_guess';
+            }
+            render();
+        }
+
+        function nextWordAfterMiss() {
+            // FIX: Set phase back to 'word' and get a new word challenge before rendering
+            gameState.phase = 'word';
+            getNewWordChallenge();
+            render();
+        }
+
+        function render() {
+            document.getElementById('level-badge').innerText = `Level ${gameState.level}`;
+            const subTitle = document.getElementById('sub-title');
+            const container = document.getElementById('game-container');
+
+            if (gameState.phase === 'won') {
+                subTitle.innerText = "You found him!";
+                let nextLevelBtn = gameState.level === 1 
+                    ? `<button onclick="initGame(2)" class="bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold text-xl sm:text-2xl px-8 py-4 rounded-full shadow-lg hover:scale-105 transition transform">Go to Level 2! 🚀</button>`
+                    : `<button onclick="initGame(1)" class="bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold text-xl sm:text-2xl px-8 py-4 rounded-full shadow-lg hover:scale-105 transition transform">Play Again (Level 1) 🚀</button>`;
+
+                container.innerHTML = `
+                    <div class="py-4 animate-bounce">
+                        <h2 class="text-3xl sm:text-5xl font-extrabold text-green-600 mb-4">🎉 YOU FOUND OSCAR! 🎉</h2>
+                        <div class="w-48 h-48 sm:w-56 sm:h-56 mx-auto rounded-3xl border-8 border-pink-400 shadow-xl overflow-hidden mb-6">
+                            <img src="${OSCAR_IMAGE}" alt="Oscar" class="w-full h-full object-cover">
+                        </div>
+                        ${nextLevelBtn}
+                    </div>
+                `;
+                return;
+            }
+
+            let bannerText = gameState.phase === 'word' 
+                ? '📖 Step 1: Read this word and click the matching picture!' 
+                : '🎴 Step 2: Pick a card to find Oscar!';
+            let bannerClass = gameState.phase === 'word' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800';
+
+            let wordSectionClass = gameState.phase === 'word' ? 'block' : 'hidden';
+            let cardSectionClass = gameState.phase === 'word' ? 'hidden' : 'block';
+
+            // Build grid HTML
+            let cardsHTML = '';
+            for (let i = 0; i < gameState.totalCards; i++) {
+                if (gameState.revealedCards[i]) {
+                    cardsHTML += `
+                        <div class="h-24 sm:h-28 rounded-2xl border-4 border-white shadow-lg overflow-hidden bg-white">
+                            <img src="${gameState.cardImages[i]}" class="w-full h-full object-cover">
+                        </div>
+                    `;
+                } else {
+                    cardsHTML += `
+                        <button onclick="pickCard(${i})" class="h-24 sm:h-28 w-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-bold text-3xl rounded-2xl border-4 border-white shadow-lg hover:scale-105 transition transform flex items-center justify-center">
+                            ?
+                        </button>
+                    `;
+                }
+            }
+
+            let optionsHTML = gameState.wordOptions.map(opt => `
+                <button onclick="submitAnswer('${opt.icon}')" class="bg-white border-4 border-pink-300 hover:border-pink-500 rounded-2xl p-4 sm:p-6 text-4xl sm:text-5xl shadow-md hover:scale-105 transition transform flex items-center justify-center">
+                    ${opt.icon}
+                </button>
+            `).join('');
+
+            let feedbackBoxHTML = '';
+            if (gameState.phase === 'wrong_guess') {
+                feedbackBoxHTML = `
+                    <div class="flex flex-col items-center mt-4">
+                        <p class="text-purple-700 font-bold text-base sm:text-lg mb-2">That's ${gameState.lastRevealedPerson}! Not Oscar. Try another word!</p>
+                        <button onclick="nextWordAfterMiss()" class="bg-purple-600 text-white px-6 py-2 rounded-full font-bold shadow hover:bg-purple-700 transition">
+                            Next Word! 🚀
+                        </button>
+                    </div>
+                `;
+            } else {
+                feedbackBoxHTML = `<p class="text-gray-500 text-sm mt-4">Turn over a card to see who is hiding underneath!</p>`;
+            }
+
+            subTitle.innerText = gameState.level === 1 ? "Read Level 1 words to find Oscar!" : "Read Level 2 words to find Oscar! (Trickier words!)";
+
+            container.innerHTML = `
+                <div id="phase-banner" class="mb-6 p-3 sm:p-4 rounded-2xl ${bannerClass} font-bold text-lg sm:text-xl">
+                    ${bannerText}
+                </div>
+
+                <!-- Word Challenge Section -->
+                <div id="word-section" class="mb-8 ${wordSectionClass}">
+                    <div class="bg-yellow-100 border-4 border-dashed border-yellow-400 rounded-3xl p-6 sm:p-8 mb-6 inline-block">
+                        <span id="target-word" class="text-5xl sm:text-6xl font-extrabold tracking-wider text-purple-700">${gameState.currentWord ? gameState.currentWord.word : ''}</span>
+                    </div>
+                    <p class="text-gray-600 mb-4 font-medium">Click the matching picture:</p>
+                    <div id="options-grid" class="grid grid-cols-3 gap-3 sm:gap-4 max-w-md mx-auto">
+                        ${optionsHTML}
+                    </div>
+                    <p id="feedback" class="mt-4 text-lg sm:text-xl font-bold h-8 text-red-500"></p>
+                </div>
+
+                <!-- Cards Grid Section -->
+                <div id="card-section" class="${cardSectionClass}">
+                    <div class="grid grid-cols-4 gap-3 sm:gap-4 max-w-xl mx-auto mb-2">
+                        ${cardsHTML}
+                    </div>
+                    <div id="card-feedback-box" class="min-h-[4rem] flex items-center justify-center">
+                        ${feedbackBoxHTML}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Start game on load
+        initGame(1);
+    </script>
+</body>
+</html>

@@ -138,31 +138,67 @@ class Particle:
 
 # MUST be async for Pygbag
 async def get_player_name(screen):
-    font = pygame.font.SysFont(None, 100)
-    prompt_font = pygame.font.SysFont(None, 70)
+    font = pygame.font.SysFont(None, 80)
+    prompt_font = pygame.font.SysFont(None, 60)
+    key_font = pygame.font.SysFont(None, 50)
     name = ""
     clock = pygame.time.Clock()
     stars = [(random.randint(0, WIDTH), random.randint(0, HEIGHT), random.randint(1, 3)) for _ in range(100)]
     
+    # Define our on-screen keyboard layout (A-Z plus Action buttons)
+    keys = [
+        "A", "B", "C", "D", "E", "F", "G",
+        "H", "I", "J", "K", "L", "M", "N",
+        "O", "P", "Q", "R", "S", "T", "U",
+        "V", "W", "X", "Y", "Z", "DEL", "GO!"
+    ]
+    
+    # Button layout math
+    button_size = 70
+    margin = 15
+    cols = 7
+    total_width = cols * button_size + (cols - 1) * margin
+    start_x = (WIDTH - total_width) // 2
+    start_y = 220  # Start drawing the keyboard halfway down
+
+    buttons = []
+    for i, key in enumerate(keys):
+        row = i // cols
+        col = i % cols
+        bx = start_x + col * (button_size + margin)
+        by = start_y + row * (button_size + margin)
+        buttons.append((pygame.Rect(bx, by, button_size, button_size), key))
+
     while True:
         screen.fill((10, 10, 30))
         for sx, sy, size in stars:
             pygame.draw.circle(screen, (200, 200, 255), (sx, sy), size)
             
-        prompt = prompt_font.render("What is your name?", True, (255, 255, 255))
-        prompt_rect = prompt.get_rect(center=(WIDTH//2, HEIGHT//2 - 60))
-        screen.blit(prompt, prompt_rect)
+        prompt = prompt_font.render("Tap your name!", True, (255, 255, 255))
+        screen.blit(prompt, prompt.get_rect(center=(WIDTH//2, 50)))
         
-        name_text = font.render(name.upper(), True, (255, 255, 255))
+        name_text = font.render(name.upper(), True, (255, 215, 0)) # Yellow text so it pops
         name_shadow = font.render(name.upper(), True, (0, 0, 0))
-        name_rect = name_text.get_rect(center=(WIDTH//2, HEIGHT//2 + 40))
-        
+        name_rect = name_text.get_rect(center=(WIDTH//2, 130))
         screen.blit(name_shadow, (name_rect.x + 3, name_rect.y + 3))
         screen.blit(name_text, name_rect)
         
-        dad_font = pygame.font.SysFont(None, 30)
-        dad_text = dad_font.render("(Type name and press ENTER)", True, (150, 150, 150))
-        screen.blit(dad_text, dad_text.get_rect(center=(WIDTH//2, HEIGHT - 50)))
+        # Draw the on-screen keyboard
+        for rect, text in buttons:
+            # Base button color
+            btn_color = (50, 50, 80)
+            
+            # Special colors for action buttons
+            if text == "GO!":
+                btn_color = (50, 205, 50) # Green
+            elif text == "DEL":
+                btn_color = (220, 50, 50) # Red
+                
+            pygame.draw.rect(screen, btn_color, rect, border_radius=10)
+            pygame.draw.rect(screen, (200, 200, 255), rect, 3, border_radius=10) # White border
+            
+            key_surf = key_font.render(text, True, (255, 255, 255))
+            screen.blit(key_surf, key_surf.get_rect(center=rect.center))
 
         pygame.display.flip()
         
@@ -170,6 +206,22 @@ async def get_player_name(screen):
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit()
+                
+            # 1. Listen for Touch / Mouse Clicks
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                mx, my = event.pos
+                for rect, text in buttons:
+                    if rect.collidepoint(mx, my): # If a button is tapped
+                        if text == "GO!":
+                            if name.strip() != "":
+                                return name.upper()
+                        elif text == "DEL":
+                            name = name[:-1]
+                        else:
+                            if len(name) < 12: # Prevent it from trailing off screen
+                                name += text
+
+            # 2. Keep Physical Keyboard support for PC
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_RETURN:
                     if name.strip() != "":
@@ -177,8 +229,8 @@ async def get_player_name(screen):
                 elif event.key == pygame.K_BACKSPACE:
                     name = name[:-1]
                 else:
-                    if len(name) < 12:
-                        name += event.unicode
+                    if len(name) < 12 and event.unicode.isalpha():
+                        name += event.unicode.upper()
                         
         await asyncio.sleep(0) # CRITICAL: Yields to browser
         clock.tick(FPS)
